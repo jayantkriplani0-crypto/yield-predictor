@@ -76,7 +76,14 @@ TRANSLATIONS = {
 }
 
 # Available options
-DISTRICTS = ['Cuttack', 'Puri', 'Bhubaneswar']
+DISTRICTS = [
+    'Angul', 'Balangir', 'Balasore', 'Bargarh', 'Bhadrak', 'Bhubaneswar', 
+    'Boudh', 'Cuttack', 'Deogarh', 'Dhenkanal', 'Gajapati', 'Ganjam', 
+    'Jagatsinghpur', 'Jajpur', 'Jharsuguda', 'Kalahandi', 'Kandhamal', 
+    'Kendrapara', 'Kendujhar', 'Khordha', 'Koraput', 'Malkangiri', 
+    'Mayurbhanj', 'Nabarangpur', 'Nayagarh', 'Nuapada', 'Puri', 
+    'Rayagada', 'Sambalpur', 'Subarnapur', 'Sundargarh'
+]
 CROPS = ['Rice', 'Wheat', 'Corn', 'Cotton', 'Sugarcane', 'Pulses', 'Oilseeds']
 SEASONS = ['Kharif', 'Rabi', 'Annual']
 IRRIGATION_METHODS = ['Flood', 'Sprinkler', 'Drip']

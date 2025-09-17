@@ -5,7 +5,7 @@ This module contains functions for creating and transforming features
 for the crop yield prediction model.
 """
 
-import pandas as pdstreamlit run frontend/app.py
+import pandas as pd
 import numpy as np
 from typing import Dict, List, Tuple, Any
 

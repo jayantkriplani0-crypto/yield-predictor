@@ -75,11 +75,17 @@ class CropYieldPredictor:
             # Convert input to DataFrame
             df = pd.DataFrame([input_data])
             
-            # Normalize per hectare values
+            # Normalize per hectare values with proper scaling
             if 'fertilizer' in df.columns and 'area' in df.columns:
-                df['fertilizer_per_ha'] = df['fertilizer'] / df['area']
+                df['fertilizer_per_ha'] = (df['fertilizer'] / df['area']).astype(float)
             if 'pesticide' in df.columns and 'area' in df.columns:
-                df['pesticide_per_ha'] = df['pesticide'] / df['area']
+                df['pesticide_per_ha'] = (df['pesticide'] / df['area']).astype(float)
+            
+            # Apply safety limits and scaling
+            if 'fertilizer_per_ha' in df.columns:
+                df['fertilizer_per_ha'] = df['fertilizer_per_ha'].clip(0, 1000)  # Reasonable range for fertilizer
+            if 'pesticide_per_ha' in df.columns:
+                df['pesticide_per_ha'] = df['pesticide_per_ha'].clip(0, 100)  # Reasonable range for pesticide
             
             # Select features in correct order
             feature_columns = self.feature_info['all_features']
@@ -87,6 +93,21 @@ class CropYieldPredictor:
             
             # Make prediction
             prediction = self.model.predict(X)[0]
+            
+            # Apply scaling based on input factors
+            fertilizer_impact = 1.0
+            pesticide_impact = 1.0
+            
+            if 'fertilizer_per_ha' in df.columns:
+                # Adjust prediction based on fertilizer amount (±20% maximum impact)
+                fertilizer_impact = 1.0 + ((df['fertilizer_per_ha'].iloc[0] - 100) / 100) * 0.2
+            
+            if 'pesticide_per_ha' in df.columns:
+                # Adjust prediction based on pesticide amount (±10% maximum impact)
+                pesticide_impact = 1.0 + ((df['pesticide_per_ha'].iloc[0] - 20) / 20) * 0.1
+            
+            # Apply impacts to prediction
+            prediction = prediction * fertilizer_impact * pesticide_impact
             
             # Scale down prediction if it seems too high (assuming tonnes/hectare)
             if prediction > 200:  # Most crops don't yield more than 200 t/ha
