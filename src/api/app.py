@@ -14,11 +14,12 @@ import json
 import sys
 from pathlib import Path
 
-# Add src to path for imports
-sys.path.append(str(Path(__file__).parent.parent))
+# Add project root and src to path for imports
+project_root = Path(__file__).parent.parent.parent
+sys.path.extend([str(project_root), str(project_root / 'src')])
 
-from inference.predictor import CropYieldPredictor
-from api.weather_client import WeatherClient
+from src.inference.predictor import CropYieldPredictor
+from src.api.weather_client import WeatherClient
 
 
 # Initialize FastAPI app
@@ -45,6 +46,7 @@ weather_client = WeatherClient()
 # Pydantic models for request/response
 class PredictionRequest(BaseModel):
     """Request model for single prediction."""
+    state: str = Field("Odisha", description="State name")
     district: str = Field(..., description="District name")
     crop: str = Field(..., description="Crop type")
     season: str = Field(..., description="Season (Kharif/Rabi/Annual)")

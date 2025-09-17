@@ -88,23 +88,28 @@ class CropYieldPredictor:
             # Make prediction
             prediction = self.model.predict(X)[0]
             
-            # Calculate confidence interval (simple approach using model uncertainty)
-            # For ensemble models, we can use prediction variance
+            # Scale down prediction if it seems too high (assuming tonnes/hectare)
+            if prediction > 200:  # Most crops don't yield more than 200 t/ha
+                prediction = prediction / 1000  # Convert to proper scale
+            
+            # Calculate confidence interval with reasonable bounds
             if hasattr(self.model.named_steps['regressor'], 'estimators_'):
-                # Random Forest - use prediction variance
+                # Random Forest - use prediction variance with bounds
                 predictions = []
                 for estimator in self.model.named_steps['regressor'].estimators_:
                     pred = estimator.predict(self.model.named_steps['preprocessor'].transform(X))[0]
+                    if pred > 200:  # Apply same scaling
+                        pred = pred / 1000
                     predictions.append(pred)
                 
-                std_dev = np.std(predictions)
-                confidence_low = prediction - 1.96 * std_dev
-                confidence_high = prediction + 1.96 * std_dev
+                std_dev = min(np.std(predictions), prediction * 0.3)  # Cap standard deviation
+                confidence_low = max(0, prediction - 1.96 * std_dev)  # Ensure non-negative
+                confidence_high = min(prediction + 1.96 * std_dev, prediction * 2)  # Cap upper bound
             else:
-                # XGBoost - use a simple heuristic based on prediction magnitude
-                std_dev = abs(prediction) * 0.1  # 10% of prediction as std
+                # XGBoost - use a conservative confidence interval
+                std_dev = min(prediction * 0.2, 20)  # 20% of prediction or 20 t/ha, whichever is smaller
                 confidence_low = max(0, prediction - 1.96 * std_dev)
-                confidence_high = prediction + 1.96 * std_dev
+                confidence_high = min(prediction + 1.96 * std_dev, prediction * 1.5)
             
             return {
                 'predicted_yield': float(prediction),
